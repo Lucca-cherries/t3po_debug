@@ -8,6 +8,10 @@ from torch.utils.data import DataLoader
 from utils.utils import seed_torch, str2bool, init_experiment
 from data.open_set_datasets import get_class_splits, get_datasets
 from utils.schedulers import get_scheduler
+import pickle
+
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]  =  "TRUE"
 
 ########################################################################################################################
 import os, os.path as osp
@@ -24,7 +28,7 @@ parser.add_argument('--dataset', type=str, default='kather2016', help="")
 parser.add_argument('--image_size', type=int, default=150)
 # optimization
 parser.add_argument('--optim', type=str, default='adam', help="Which optimizer to use {adam, sgd, adam_sam}")
-parser.add_argument('--batch_size', type=int, default=128)
+parser.add_argument('--batch_size', type=int, default=1)
 parser.add_argument('--lr', type=float, default=0.01, help="learning rate for model")
 parser.add_argument('--weight_decay', type=float, default=0.0, help="LR regularisation on weights")
 parser.add_argument('--momentum', type=float, default=0.0, help="momentum for SGD")
@@ -39,7 +43,7 @@ parser.add_argument('--dropout_p', type=float, default=0.0, help="dropout for cl
 parser.add_argument('--transform', type=str, default='trivial-augment_wide')
 # misc
 parser.add_argument('--verbose', default=False, type=str2bool, help='print stats to screen during training', metavar='BOOL')
-parser.add_argument('--num_workers', default=8, type=int)
+parser.add_argument('--num_workers', default=0, type=int)
 parser.add_argument('--device', default='cuda:0', type=str, help='device (cuda or cpu, default: cuda:0)')
 parser.add_argument('--eval_freq', type=int, default=20)
 parser.add_argument('--seed', type=int, default=0)
@@ -79,6 +83,9 @@ def train_one_epoch(net, criterion, optimizer, trainloader):
     n_correct, total = 0, 0
 
     for batch_idx, (data, labels) in enumerate(tqdm(trainloader)):
+        tqdm.write(str(batch_idx))
+        tqdm.write(str(data))
+        tqdm.write(str(labels))
         if torch.cuda.is_available():
             data, labels = data.cuda(), labels.cuda()
         with torch.set_grad_enabled(True):
@@ -133,6 +140,15 @@ def train_model(args):
         print("Currently using CPU")
 
     train_loader, val_loader, out_loader = dataloaders['train'], dataloaders['val'], dataloaders['test_unknown']
+
+    # print(2222)
+    # print(dataloaders)
+    # for data, labels in train_loader:
+    #     print(data)
+    #     print(labels)
+    # print(1111)
+
+
 
     # Get base network and criterion
     print("Creating model: {}".format(args.model))
@@ -237,9 +253,13 @@ if __name__ == '__main__':
 
     dataloaders = {}
     for k, ds, in datasets.items():
+        # print(ds)
         shuffle = True if k == 'train' else False
         dataloaders[k] = DataLoader(ds, batch_size=args.batch_size, shuffle=shuffle, num_workers=args.num_workers)
+        # for data in dataloaders[k]:
+        #     print(data)
     # dataloaders is a dict with keys 'train', 'val', 'test_known', 'test_unknown', check it out:
+
     additional_classes = 0 # len(args.train_classes)  # this will be for # of transforms
     vars(args).update(
         {

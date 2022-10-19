@@ -68,9 +68,12 @@ def subsample_dataset(dataset, idxs):
     # I am replacing the above awful code by a faster version, no need to enumerate for each idx the same set again and
     # again, people should be more careful with comprehensions (agaldran).
     imgs, sampls = [], []
-    for i in idxs:
-        imgs.append(dataset.imgs[i])
-        sampls.append(dataset.samples[i])
+    try:
+        for i in idxs:
+            imgs.append(dataset.imgs[i])
+            sampls.append(dataset.samples[i])
+    except Exception as err:
+        print(err)
     dataset.imgs = imgs
     dataset.samples = sampls
     dataset.targets = np.array(dataset.targets)[idxs].tolist()
@@ -86,7 +89,10 @@ def subsample_classes(dataset, include_classes=(0,1)):
         target_xform_dict[k] = i
 
     dataset = subsample_dataset(dataset, cls_idxs)
+
     dataset.target_transform = lambda x: target_xform_dict[x]
+
+    print(dataset.imgs)
 
     # torchvision ImageFolder dataset have a handy class_to_idx attribute that we have spoiled and need to re-do
     # filter class_to_idx to keep only include_classes
@@ -120,6 +126,8 @@ def get_equal_len_datasets(dataset1, dataset2):
 
 def get_kather2016_datasets(train_transform, test_transform, known_classes=(0,1), open_set_classes=(2,3), seed=0):
 
+    torchvision.set_image_backend('PIL')
+
     kather_train_dir = osp.join(kather2016_root, 'train')
     kather_val_dir = osp.join(kather2016_root, 'val')
     kather_test_dir = osp.join(kather2016_root, 'test')
@@ -128,6 +136,8 @@ def get_kather2016_datasets(train_transform, test_transform, known_classes=(0,1)
     # Build train/val dataset and subsample known_classes
     train_dataset = Kather2016(root=kather_train_dir, transform=train_transform)
     train_dataset = subsample_classes(train_dataset, include_classes=known_classes)
+
+
 
     val_dataset = Kather2016(root=kather_val_dir, transform=test_transform)
     val_dataset = subsample_classes(val_dataset, include_classes=known_classes)
@@ -147,7 +157,7 @@ def get_kather2016_datasets(train_transform, test_transform, known_classes=(0,1)
 
     # print(len(test_dataset_known), len(test_dataset_known))
     # print(val_dataset.targets)
-    # print(test_dataset_known.targets)
+    # print(train_dataset.items())
     # print(test_dataset_unknown.targets)
     # import sys
     # sys.exit()
@@ -157,6 +167,7 @@ def get_kather2016_datasets(train_transform, test_transform, known_classes=(0,1)
         'test_known': test_dataset_known,
         'test_unknown': test_dataset_unknown,
     }
+    # print(all_datasets)
 
     return all_datasets
 

@@ -9,6 +9,9 @@ from utils.utils import seed_torch, str2bool, init_experiment
 from data.open_set_datasets import get_class_splits, get_datasets
 from utils.schedulers import get_scheduler
 
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]  =  "TRUE"
+
 ########################################################################################################################
 import sys, os, os.path as osp
 from utils.get_model import get_arch
@@ -42,7 +45,7 @@ parser.add_argument('--dropout_p', type=float, default=0.0, help="dropout for cl
 parser.add_argument('--transform', type=str, default='T3PO_color_wide')
 # misc
 parser.add_argument('--verbose', default=False, type=str2bool, help='print stats to screen during training', metavar='BOOL')
-parser.add_argument('--num_workers', default=8, type=int)
+parser.add_argument('--num_workers', default=0, type=int)
 parser.add_argument('--device', default='cuda:0', type=str, help='device (cuda or cpu, default: cuda:0)')
 parser.add_argument('--eval_freq', type=int, default=20)
 parser.add_argument('--seed', type=int, default=0)
